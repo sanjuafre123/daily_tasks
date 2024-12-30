@@ -1,109 +1,165 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart';
-import 'package:http/http.dart'as http;
+import 'package:provider/provider.dart';
+import '../../modal/modal.dart';
+import '../../provider/provider.dart';
 
-class TodoPage extends StatefulWidget {
+class TodoScreen extends StatefulWidget {
+  const TodoScreen({super.key});
+
   @override
-  _TodoPageState createState() => _TodoPageState();
+  TodoScreenState createState() => TodoScreenState();
 }
 
-class _TodoPageState extends State<TodoPage> {
-  List todos = [];
-  bool isGridView = false;
-  bool isDarkTheme = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchTodos();
-    _loadPreferences();
-  }
-
-  Future<void> _fetchTodos() async {
-    final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/todos'));
-    if (response.statusCode == 200) {
-      setState(() {
-        todos = json.decode(response.body);
-      });
-    } else {
-      throw Exception('Failed to load todos');
-    }
-  }
-
-  Future<void> _loadPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isGridView = prefs.getBool('isGridView') ?? false;
-      isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
-    });
-  }
-
-  Future<void> _savePreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isGridView', isGridView);
-    await prefs.setBool('isDarkTheme', isDarkTheme);
-  }
-
+class TodoScreenState extends State<TodoScreen> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Todos'),
-          actions: [
-            IconButton(
-              icon: Icon(isGridView ? Icons.list : Icons.grid_view),
-              onPressed: () {
-                setState(() {
-                  isGridView = !isGridView;
-                  _savePreferences();
-                });
+    final provider = Provider.of<TodoProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        scrolledUnderElevation: 0.1,
+        title: const Text(
+          'Todos',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(provider.isGrid ? Icons.list : Icons.grid_view),
+            onPressed: provider.toggleView,
+          ),
+          IconButton(
+            icon: Icon(
+                provider.isDarkTheme ? Icons.dark_mode : Icons.light_mode),
+            onPressed: provider.toggleTheme,
+          ),
+        ],
+      ),
+      body: Consumer<TodoProvider>(
+        builder: (context, provider, child) {
+          if (provider.todos.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: provider.isGrid
+                ? GridView.builder(
+              gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+              ),
+              itemCount: provider.todos.length,
+              itemBuilder: (context, index) {
+                return _buildGridTodoCard(provider.todos[index]);
+              },
+            )
+                : ListView.builder(
+              itemCount: provider.todos.length,
+              itemBuilder: (context, index) {
+                return _buildListTodoTile(provider.todos[index]);
               },
             ),
-            IconButton(
-              icon: Icon(isDarkTheme ? Icons.light_mode : Icons.dark_mode),
-              onPressed: () {
-                setState(() {
-                  isDarkTheme = !isDarkTheme;
-                  _savePreferences();
-                });
-              },
-            ),
-          ],
-        ),
-        body: todos.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : isGridView
-            ? GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-          itemCount: todos.length,
-          itemBuilder: (context, index) {
-            return _buildTodoCard(todos[index]);
-          },
-        )
-            : ListView.builder(
-          itemCount: todos.length,
-          itemBuilder: (context, index) {
-            return _buildTodoCard(todos[index]);
-          },
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTodoCard(todo) {
+  Widget _buildListTodoTile(Todo todo) {
     return Card(
-      color: todo['completed'] ? Colors.green.shade100 : Colors.red.shade100,
+      elevation: 5,
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
       child: ListTile(
-        title: Text(todo['title']),
-        trailing: Icon(
-          todo['completed'] ? Icons.check_circle : Icons.pending,
-          color: todo['completed'] ? Colors.green : Colors.red,
+        leading: Container(
+          decoration: BoxDecoration(
+            color: todo.completed ? Colors.green.shade100 : Colors.red.shade100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(8.0),
+          child: Icon(
+            todo.completed ? Icons.check_circle : Icons.pending,
+            color: todo.completed ? Colors.green : Colors.red,
+          ),
+        ),
+        title: Text(
+          todo.title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          todo.completed ? 'Completed' : 'Pending',
+          style: TextStyle(
+            color: todo.completed ? Colors.green : Colors.red,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        tileColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildGridTodoCard(Todo todo) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: todo.completed
+              ? [Colors.green.shade300, Colors.green.shade100]
+              : [Colors.red.shade300, Colors.red.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              todo.title,
+              style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  todo.completed ? 'Completed' : 'Pending',
+                  style: TextStyle(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white70,
+                  ),
+                ),
+                Icon(
+                  todo.completed ? Icons.check_circle : Icons.pending,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
