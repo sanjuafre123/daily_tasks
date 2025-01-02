@@ -89,6 +89,7 @@ class TodoScreenState extends State<TodoScreen> {
           todo.title,
           style: const TextStyle(
             fontSize: 18,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
           maxLines: 2,
