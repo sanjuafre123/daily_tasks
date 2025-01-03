@@ -1,16 +1,9 @@
 # placement_tasks
 
-A new Flutter project.
+## Description
 
-## Getting Started
+A simple Flutter app designed to allow users to log in and view their profile details. The app features a login screen with a blue-themed UI, where users can enter their username and password. Upon successful login, users are directed to a home screen where their profile details such as name, username, email, and other personal information are displayed in a clean and attractive layout. The app uses Provider for state management, ensuring smooth data handling. The UI is minimalistic yet user-friendly, focusing on a seamless experience for viewing user profile data.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<img src = "https://github.com/user-attachments/assets/39bf1cc9-427b-4dbc-a965-17cc467afb66" height = 65% width = 22%>
+<img src = "https://github.com/user-attachments/assets/11923d9f-d264-464d-bca1-a8672a3fb0a6" height = 65% width = 22%>
+<img src = "https://github.com/user-attachments/assets/15a491b3-cedb-4a04-be88-cb4aefdee31a" height = 65% width = 22%>
