@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:placement_tasks/provider/provider.dart';
-import 'package:placement_tasks/view/screen/todo_screen.dart';
+import 'package:placement_tasks/task2/provider/api_service.dart';
+import 'package:placement_tasks/task2/screens/home_screen.dart';
+import 'package:placement_tasks/task2/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 
 bool isDark = false;
 
@@ -15,7 +17,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => TodoProvider(),
+          create: (context) => UserProvider(),
         ),
       ],
       child: const MyApp(),
@@ -28,13 +30,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<TodoProvider>(context);
     return MaterialApp(
-      themeMode: provider.isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      home: TodoScreen(),
+      title: 'Login System App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: FutureBuilder<bool>(
+        future: checkLoginStatus(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData && snapshot.data == true) {
+            return const HomeScreen(); // Navigate to Home if logged in
+          } else {
+            return const LoginScreen(); // Navigate to Login if not logged in
+          }
+        },
+      ),
     );
+  }
+
+  Future<bool> checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isLoggedIn') ?? false;
   }
 }
