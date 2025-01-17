@@ -1,28 +1,17 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:placement_tasks/task2/provider/user_provider.dart';
-import 'package:placement_tasks/task2/screens/component/userdata_screen.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-bool isDark = false;
+import 'firebase_options.dart';
 
-Future<void> main() async {
+
+Future<void> main()
+async {
   WidgetsFlutterBinding.ensureInitialized();
-  SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-  sharedPreferences.getBool('isDarkTheme') ?? false;
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) => UsersProvider(),
-        ),
-      ],
-      child: const MyApp(),
-    ),
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+  runApp(MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -30,11 +19,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'User Manager',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomeScreen(),
     );
   }
 }
